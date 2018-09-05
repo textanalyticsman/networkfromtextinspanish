@@ -188,7 +188,7 @@ public class CAnalyzer {
 
             //printEntities(doc);
             
-            result=saveEntitiesAndSentences(doc, c);            
+            result=saveEntitiesSentencesParagraphs(doc, c);            
             
             System.out.println("=====================================================");            
             System.out.println("ID of the document: " + c.getDocid());          
@@ -211,146 +211,190 @@ public class CAnalyzer {
         return result;
     }
     
-    private boolean saveEntitiesAndSentences(Document doc, DAODocument daoDoc)
+    private boolean saveEntitiesSentencesParagraphs(Document doc, DAODocument daoDoc)
     {
         /*
-        Estoy recibiendo dos parámetros el primero es el documento generados por FreeLing con
-        informacion sobre entidades detectadas. El segundo es el documento DAO que usaré para
-        establecer relaciones
+        This receives two parameters a Document with information about entities, 
+        which is know as FreeLing document and a DAODOcument, which is the local
+        representation of a document used by this application. The Freeling document 
+        is analysed generating entities, sentences and paragraphs on the database        
         
+        ChangeName: Including the paragraph
+        Date:       26/03/2017
+        Detail:     Here I have to add the logic to save the paragraph        
         */
       
         boolean answer=true;
+        //This flag is used to avoid any action for empty paragraphs
+        //boolean emptyParagraph=true;
 
         EntityManager entityManager = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager();
         //Empiezo la transaccion
-        entityManager.getTransaction().begin();        
-
-     
-        /*Aquí recorro cada uno de los documentos FreeLing que componen el corpus para
-          obtener sus entidades
-        */          
+        entityManager.getTransaction().begin();           
+        
+        //To reconstruct paragrpahs using the order of sentences.
         int sentenceNumber=0;
+        /*
+        This variable is used to control paraghrap's order. In this way we will
+        be able to reconstruct the document following the order of paragraphs
+        */        
+        int paragraphNumber=0; 
         String oracion;
         String bunchOfEntities;
         String entity;
         
-        ListParagraphIterator pIt = new ListParagraphIterator(doc);
-  
+        ListParagraphIterator pIt = new ListParagraphIterator(doc);        
+        
+        //The set of paragraphs that belong to the document
+        Set<DAOParagraph> daoParagraphSet = new HashSet<DAOParagraph>();
         
         while (pIt.hasNext()) {
-            /*
-            ChangeName: Including the paragraph
-            Date:       26/03/2017
-            Detail:     Here I have to add the logic to save the paragraph
+            
+            /*To iterate through sentences and to detect whether the paragraph is
+            empty or not
             */            
-            //edu.upc.freeling.Paragraph p= pIt.next();
-            
-            /*
-            Here I have to put code to save the paragraph. Of course,
-            it includes the relationship between paragrapgh and document
-            
-            */
-            
-            
             ListSentenceIterator sIt = new ListSentenceIterator(pIt.next());
             
-            while (sIt.hasNext()) {
-                sentenceNumber++;
-                Sentence s = sIt.next();                            
-                ListWordIterator wIt = new ListWordIterator(s);              
-                oracion="";
-                entity="";
-                bunchOfEntities="";
+            if (sIt.hasNext())
+            {
+                System.out.println("NO EMPTY PARAGRAPH");
+                //This line is used to create the paragraph used to group sentences
+                DAOParagraph daoParagraph = new DAOParagraph();
+                //To increase the paragraph order counter
+                paragraphNumber++;
 
-                //Creación ede la sentencia que es guardada en la base de datos
-                DAOSentence daoSentence = new DAOSentence();
-                //Se relaciona la sentencia con el documento que se ha creado previamente
-                daoSentence.setDocid(daoDoc);
+                System.out.println("Paragraph number: " + paragraphNumber);
 
-                /*
-                The previous line has to be modified to set the relationship between sentence and
-                paragraph
+                //The position (order)of this paragraph within the document
+                daoParagraph.setParagraphorder(paragraphNumber);
+
+                while (sIt.hasNext()) 
+                {  
+                    //Change the flag state to process this paragraph
+                    //emptyParagraph=false;
+                    //Increase the sentence order
+                    sentenceNumber++;
+                    //Getting the next sentence
+                    Sentence s = sIt.next();   
+                    //Getting the list of words inside the sentence
+                    ListWordIterator wIt = new ListWordIterator(s);              
+                    oracion="";
+                    entity="";
+                    bunchOfEntities="";
+
+                    //Creación ede la sentencia que es guardada en la base de datos
+                    DAOSentence daoSentence = new DAOSentence();
+                    //The sentence is related with the paragraph
+                    daoSentence.setParagraphid(daoParagraph);
+
+                    //Aquí debo de generar una colección de entitidades de tipo raw
+                    Set <DAOEntityRaw> daoEntityRawSet=new HashSet<DAOEntityRaw>();
+
+                    //Con este while detecto los tipos de entidades
+                    while (wIt.hasNext()) {
+                        Word w = wIt.next();
+                        String type="";
+                        switch (w.getTag()) {
+                            case "NP00SP0":
+                                type="PER";
+                                break;
+                            case "NP00G00":
+                                type="LOC";
+                                break;
+                            case "NP00O00":
+                                type="ORG";
+                                break;
+                            case "NP00V00":
+                                type="OTH";
+                                break;
+                            default:
+                                break;
+                        }
+
+                        if(!type.equals(""))
+                        {
+
+                            //entity ="<"+type+">"+w.getForm()+"</"+type+">";
+                            entity ="<"+type+">"+w.getForm().replace('_',' ')+"</"+type+">";
+                            oracion=oracion+entity+" ";                      
+                            bunchOfEntities=bunchOfEntities+entity+", ";                      
+                            entity="";
+
+                            //Borro el caracter "_" añadido por FreeLing
+                            String entityTemp=w.getForm().replace('_',' ');
+
+                            //Creo una nueva entidad con los datos extraídos del texto por FreeLing
+                            DAOEntityRaw daoEntityRaw= new DAOEntityRaw();
+                            daoEntityRaw.setEntityname(entityTemp);
+                            daoEntityRaw.setEntitytype(type);
+                            //establezco la relación con la tabla de documentos
+                            daoEntityRaw.setSentenceid(daoSentence);
+
+                            //Guardo la entidad en la base de datos
+                            entityManager.persist(daoEntityRaw);
+                            //entityManager.clear();
+
+                            //Añado la entidad detectada a la colección de entidades que le pertenecen
+                            //a una sentencia
+                            daoEntityRawSet.add(daoEntityRaw);
+                        }
+                        else
+                        {
+                            oracion=oracion+w.getForm()+" ";
+                        }
+                    }
+                    System.out.println();
+                    System.out.println("Sentence number: "+ sentenceNumber);
+                    System.out.println("Sentence: " + oracion);
+                    System.out.println("Entities: " + bunchOfEntities);
+
+                    //Tomo el objeto dao de sentencia y le asigno el contenido de la oración detectada                
+                    daoSentence.setSentencecontent(oracion);
+                    //Tomo el objeto dao de sentencia y le coloco su número de orden en el texto
+                    daoSentence.setSentenceorder(sentenceNumber);              
+                    //Relaciono la sentencia con su lista de entidades
+                    if (!daoEntityRawSet.isEmpty())
+                    {
+                        daoSentence.setDAOEntityRawSet(daoEntityRawSet);
+
+                    }
+
+                    /*Saving the sentence on the DB. This instruction also saves 
+                    the set of entities "daoEntityRawSet" related to the sentence*/
+                    entityManager.persist(daoSentence);
+                    //entityManager.clear();                            
+                }
+                /*Saving the paragraph after cheking the flag to avoid persisting
+                an emtpty paragraph that generates a Column 'PARAGRAPHID' cannot be null
                 */
-                
-                
-                //Aquí debo de generar una colección de entitidades de tipo raw
-                Set <DAOEntityRaw> daoEntityRawSet=new HashSet<DAOEntityRaw>();
-
-                //Con este while detecto los tipos de entidades
-                while (wIt.hasNext()) {
-                    Word w = wIt.next();
-                    String type="";
-                    switch (w.getTag()) {
-                        case "NP00SP0":
-                            type="PER";
-                            break;
-                        case "NP00G00":
-                            type="LOC";
-                            break;
-                        case "NP00O00":
-                            type="ORG";
-                            break;
-                        case "NP00V00":
-                            type="OTH";
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if(!type.equals(""))
-                    {
-                        
-                        //entity ="<"+type+">"+w.getForm()+"</"+type+">";
-                        entity ="<"+type+">"+w.getForm().replace('_',' ')+"</"+type+">";
-                        oracion=oracion+entity+" ";                      
-                        bunchOfEntities=bunchOfEntities+entity+", ";                      
-                        entity="";
-
-                        //Borro el caracter "_" añadido por FreeLing
-                        String entityTemp=w.getForm().replace('_',' ');
-
-                        //Creo una nueva entidad con los datos extraídos del texto por FreeLing
-                        DAOEntityRaw daoEntityRaw= new DAOEntityRaw();
-                        daoEntityRaw.setEntityname(entityTemp);
-                        daoEntityRaw.setEntitytype(type);
-                        //establezco la relación con la tabla de documentos
-                        daoEntityRaw.setSentenceid(daoSentence);
-
-                        //Guardo la entidad en la base de datos
-                        entityManager.persist(daoEntityRaw);
-                        //entityManager.clear();
-
-                        //Añado la entidad detectada a la colección de entidades que le pertenecen
-                        //a una sentencia
-                        daoEntityRawSet.add(daoEntityRaw);
-                    }
-                    else
-                    {
-                        oracion=oracion+w.getForm()+" ";
-                    }
-                }
-                System.out.println();
-                System.out.println("Sentence number: "+ sentenceNumber);
-                System.out.println("Sentence: " + oracion);
-                System.out.println("Entities: " + bunchOfEntities);
-
-                //Tomo el objeto dao de sentencia y le asigno el contenido de la oración detectada
-                daoSentence.setSentencecontent(oracion);
-                //Tomo el objeto dao de sentencia y le coloco su número de orden en el texto
-                daoSentence.setSentenceorder(sentenceNumber);              
-                //Relaciono la sentencia con su lista de entidades
-                if (!daoEntityRawSet.isEmpty())
-                {
-                    daoSentence.setDAOEntityRawSet(daoEntityRawSet);
-
-                }
-
-                //Guardo la sentencia en la base de datos. Al hacer esto también se guarda la relación muchos a muchos 
-                //entre sentencia y entidades
-                entityManager.persist(daoSentence);
-                //entityManager.clear();                            
+                //if(!emptyParagraph)
+                //{
+                //System.out.println("NO EMPTY PARAGRAPH");
+                //Here the paragraph is related to the document
+                daoParagraph.setDocid(daoDoc);
+                //The paragraph is saved
+                entityManager.persist(daoParagraph);
+                //The paragraph is added into the paragraphs set
+                daoParagraphSet.add(daoParagraph);
+                //The flag is set to tru to avoid processing empty paragraphs
+                //emptyParagraph=true;
+                //}
+                //else
+                //{
+                  //  System.out.println("EMPTY PARAGRAPH");
+                //}                
+            }    
+            else
+            {
+                System.out.println("EMPTY PARAGRAPH");
             }
+                
+    
+        }
+        if (!daoParagraphSet.isEmpty())
+        {            
+            daoDoc.setDAOParagraphSet(daoParagraphSet);
+
         }
         try
         {

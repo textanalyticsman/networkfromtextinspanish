@@ -9,7 +9,11 @@ import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -30,11 +34,15 @@ public class DAOParagraph implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "PARAGRAPHID")
     private Integer paragraphid;
     @Column(name = "PARAGRAPHORDER")
-    private String paragraphorder;
+    private Integer paragraphorder;
+    @JoinColumn(name = "DOCID", referencedColumnName = "DOCID")
+    @ManyToOne(optional = false)
+    private DAODocument docid;
 
     public DAOParagraph() {
     }
@@ -51,12 +59,20 @@ public class DAOParagraph implements Serializable {
         this.paragraphid = paragraphid;
     }
 
-    public String getParagraphorder() {
+    public Integer getParagraphorder() {
         return paragraphorder;
     }
 
-    public void setParagraphorder(String paragraphorder) {
+    public void setParagraphorder(Integer paragraphorder) {
         this.paragraphorder = paragraphorder;
+    }
+
+    public DAODocument getDocid() {
+        return docid;
+    }
+
+    public void setDocid(DAODocument docid) {
+        this.docid = docid;
     }
 
     @Override

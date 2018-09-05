@@ -7,7 +7,6 @@ package logic;
 
 import database.DAOCluster;
 import database.DAOEntityRaw;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -152,38 +151,6 @@ public class CEntityRaw {
         }        
 
         
-        /*
-        Iterator iter= entitiesSet.iterator();  
-        
-        //The begining of the transaction
-        em.getTransaction().begin();
-        
-        while (iter.hasNext())
-        {                                                
-            //A query to delete entities
-            Query query = em.createNativeQuery(queryText);
-            //Getting the ID from the HashSet
-            int entityId=(Integer)iter.next();
-            //Setting the parameter used to find and to eliminate an entity
-            query.setParameter(1, entityId);            
-            //Saving changes
-            em.persist(doc);
-        }        
-        try
-        {
-            //Commiting the transaction
-            em.getTransaction().commit();                    
-        }
-        catch(Exception e)
-        {
-            //Executing a rollback in case of error
-            em.getTransaction().rollback();  
-            answer=false;
-        }        
-
-        
-        return result;*/
-        
         return answer;
         
     }
@@ -202,17 +169,19 @@ public class CEntityRaw {
     public List<DAOEntityRaw> getEntitiesByCorpusId(EntityManager em, int corpusId)
     {
          String queryText="select " +
-                        "e.ENTITYID,e.ENTITYNAME,e.ENTITYTYPE,e.SENTENCEID "+
+                        "e.ENTITYID,e.ENTITYNAME,e.ENTITYTYPE,e.SENTENCEID " +
                         "from " +
                         "CORPUS c, " +
                         "document d, " +
                         "sentence s, " +
-                        "entityraw e " +
+                        "entityraw e, " +
+                        "paragraph p " +
                         "where " +
-                        "c.CORPID=?1 and " +
+                        "c.CORPID=? and " +
                         "c.CORPID=d.CORPID and " +
-                        "d.DOCID=s.DOCID and " +
-                       " s.SENTENCEID=e.SENTENCEID ";    
+                        "s.SENTENCEID=e.SENTENCEID and " +
+                        "p.PARAGRAPHID=s.PARAGRAPHID and " +
+                        "p.DOCID=d.DOCID"; 
             
             Query query=em.createNativeQuery(queryText, DAOEntityRaw.class);
             
@@ -271,47 +240,22 @@ public class CEntityRaw {
         return result;               
    }
    
+   /**
+    * This method is used to relate entities with a new cluster that has been
+    * created manually
+    * @param em this is the entity manager
+    * @param entitiesToCreateNewCluster this is the list of entities whose
+    * cluster ID is going to be updated
+    * @param oldClusterId is the cluster ID before the update
+    * @param newClusterId is the new cluster ID that has been created manually
+   */
    public void updateEntitiesClusterByHand(EntityManager em, HashSet<Integer> entitiesToCreateNewCluster, int oldClusterId, int newClusterId)
    {
-       //Obtengo el objeto cluster que quiero modificar
-       /*Query query=em.createNamedQuery("DAOCluster.findByClusterid");
-       query.setParameter("clusterid", oldClusterId);
-       DAOCluster clusterOld= (DAOCluster)query.getSingleResult();
-       
-       //Obtengo el objeto cluster que reemplazará al anterior
-       query.setParameter("clusterid", newClusterId);
-       DAOCluster clusterNew= (DAOCluster)query.getSingleResult();
-       
-       //Creo la lista de entidades raw que me servirá como criterio de selección 
-       //para ejecutar el update
-       List<DAOEntityRaw> listOfEntities=new ArrayList<DAOEntityRaw>();
-        
-        query=em.createNamedQuery("DAOEntityRaw.findByEntityid");
-        
-        for (Integer entity:entitiesToCreateNewCluster)
-        {            
-            int entityRawId=entity;
-                        
-            query.setParameter("entityid", entityRawId);
-            DAOEntityRaw entityRaw= (DAOEntityRaw)query.getSingleResult();
-            
-            listOfEntities.add(entityRaw);
-            
-        } */
-       
-       String querySelect="select d "
-               + "from DAOEntityrawcluster d "
-               + "where "
-               + "d.dAOEntityrawclusterPK.clusterid= :oldClusterId and "
-               + "d.dAOEntityrawclusterPK.entityid in :listOfEntities";
-       
-       Query testing=em.createQuery(querySelect);      
-       testing.setParameter("oldClusterId", oldClusterId);
-       testing.setParameter("listOfEntities", entitiesToCreateNewCluster);
-       
-       List resp=testing.getResultList();
-       
-       
+
+       /*
+       This is the update to relate entities with the new cluster that has been
+       created manually
+       */
        String updateText="update DAOEntityrawcluster d  set d.dAOEntityrawclusterPK.clusterid= :newClusterID "
                          + "where d.dAOEntityrawclusterPK.clusterid= :oldClusterId and d.dAOEntityrawclusterPK.entityid in :listOfEntities";
        

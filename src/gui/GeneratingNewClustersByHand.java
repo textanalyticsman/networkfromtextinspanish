@@ -7,6 +7,7 @@ package gui;
 
 import database.DAOCluster;
 import database.DAOCorpus;
+import database.DAOEntityNormalized;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import logic.CCluster;
 import logic.CCorpus;
+import logic.CEntityNormalized;
 import logic.CEntityRaw;
 import org.apache.commons.lang3.text.WordUtils;
 
@@ -215,8 +217,14 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
         comboBox.addItem("PER");
         typeColumn.setCellEditor(new DefaultCellEditor(comboBox));*/
 
-        ////////////////////////////////////////////////////////////////////
-        //Source: https://tips4java.wordpress.com/2009/06/07/table-cell-listener/
+        /*
+        The following event manager has been done using the code impleted by
+        Rob Camick on June 7, 2009
+        Source: https://tips4java.wordpress.com/2009/06/07/table-cell-listener/
+        Each time cell within the check box is marked the selected entity is added into
+        a hash map using the the method addEntityIntoHashMap(boolean newValue, int entityId)
+        When the cell is unchecked the entity is removed from the hash set
+        */
         Action action = new AbstractAction()
         {
             public void actionPerformed(ActionEvent e)
@@ -245,7 +253,7 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
 
                     addEntityIntoHashMap(entityId, entityName, oldType, newType, sentenceId, sentence);*/
 
-                    addEntityIntoHashMap(newValue,entityId);
+                    addOrDeletedEntityIntoHashMap(newValue,entityId);
                 }
 
             }
@@ -401,13 +409,77 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
     }
     private void jButtonGenerateNewClusterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateNewClusterActionPerformed
 
-        String answer=generateNewCluster();
+        /*
+        28/08/2018 Modifying this method to verify whether the corpus under
+        analysis has normalized entities and if so, verify whether these 
+        normalized entities would have been related to sentences or not.        
+        */
+        int row=jTableAvailableCorpora.getSelectedRow();                
+        //Getting the corpus ID
+        int corpusId=(Integer)jTableAvailableCorpora.getValueAt(row, 0);         
+        row=jTableConfigurationClusterAvailable.getSelectedRow();
+        //Getting minPts and Epsilon
+        int minPts=(Integer)jTableConfigurationClusterAvailable.getValueAt(row, 0); 
+        double epsilon=(Double)jTableConfigurationClusterAvailable.getValueAt(row, 1); 
+        CEntityNormalized cEntNorm= new CEntityNormalized();
+        /*Variable to check whether normalized entities have been created for 
+        this corpus*/
+        long existNorEnt=cEntNorm.validateExistanceOfNormalizedEntities(corpusId, minPts, epsilon);
+        /*Variable to check whether normalized entities have been created and 
+        related to sentences for this corpus*/
+        long existRelSen=cEntNorm.validateExistanceOfSentenceNormalizedEntities(corpusId, minPts, epsilon);
         
-        if(answer.compareTo("")==0)
+        //The method to create a new cluster is executed
+        String[] answer=generateNewCluster();
+        
+        /*This conditional checks the answer got after saving a new cluster on 
+        the database*/
+        if(answer[0].compareTo("")==0)
         {
+            String instanceMessage="";
+            String sentenceMessage="";
+            //Getting the ID for the new cluster
+            int newClusterId=Integer.valueOf(answer[1]) ;
             refreshScreenAfterGeneratingNewCluster();
+            //Validating whether normalized entities have been got for this corpus
+            if(existNorEnt!=0)
+            {
+                //Getting the normalized entity for the cluster created by hand
+                DAOEntityNormalized daoEntNor=new DAOEntityNormalized();
+                daoEntNor=cEntNorm.getNormanlizedEntityForACluster(corpusId, minPts, epsilon, newClusterId);
+                /*Saving the normalized entity*/
+                EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager();
+                em.getTransaction().begin();
+                //Sacing the normalized entity
+                cEntNorm.saveNormalizedEntity(em, daoEntNor.getEntitynormname(), 
+                                             daoEntNor.getEntitynormtype(), 
+                                             daoEntNor.getClusterid().getClusterid());
+                //Committing the transaction
+                try
+                {
+                  em.getTransaction().commit();
+                }
+                catch (Exception e)
+                {
+                  instanceMessage="\n It was impossible to generate a normalized entity for this cluster";
+                  em.getTransaction().rollback();
+                  e.printStackTrace();
+                  throw e;
+                }
+                /*Generatiing the relationship between the normalized entity and
+                its sentences
+                */
+                if(existRelSen!=0)
+                {
+                    List<Object[]> resultSet=cEntNorm.getNormalizedEntitiyAndSentencesForACLuster(corpusId, minPts, epsilon, newClusterId);
+                    sentenceMessage=cEntNorm.saveRelationNormalizedEntitySentencesForACluster(resultSet);                    
+                }                
+                    
+            }
 
             String message="A new cluster with selected entities by you was created";
+                    /*+
+                            instanceMessage+sentenceMessage;*/
             String title="Generating a new cluster by hand";                
             JOptionPane.showMessageDialog(null,message,title, JOptionPane.INFORMATION_MESSAGE);                               
         }
@@ -431,15 +503,18 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
         showClusters(corpusId, minPts,  epsilon);        
     }
     
-    private String generateNewCluster()
+    private String[] generateNewCluster()
     {
-        String answer="";
+        /*The first element of this array is the message, the second element is 
+        the cluster ID if this is generated without problems
+        */
+        String[] answer={"",""};
                 
         if(entitiesToCreateNewCluster.size()>=2)
         {
             EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager(); 
             
-            /*Primero obtengo los datos necesarios para crear un nuevo cluster*/
+            /*Gathering the fields needed to create a new cluster*/
             int row=jTableAvailableCorpora.getSelectedRow();                
             
             int corpusId=(Integer)jTableAvailableCorpora.getValueAt(row, 0); 
@@ -449,14 +524,18 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
             int minPts=(Integer)jTableConfigurationClusterAvailable.getValueAt(row, 0);             
             double epsilon=(Double)jTableConfigurationClusterAvailable.getValueAt(row, 1);
             
-            int label=jTableClusters.getRowCount()-1;//Con esto me evito correr un count en la BD
+            /*To avoid running a count on the database, label means the number of
+            elements that belong to the cluster
+            */
+            int label=jTableClusters.getRowCount()-1;
             
             row=jTableClusters.getSelectedRow();
             int oldClusterId=(Integer)jTableClusters.getValueAt(row, 0);                        
             
-            /*Ahora que tengo todos los datos debo llamar a un metodo de CCluster que
-              crea un nuevo cluster tomando como entradas al corpusid, minPts, epsilon, label
-              y el entity manager.
+            /*
+            Now as all the data is gathered it is time to call a method, which 
+            belongs to CCluster that creates a new cluster taken as input a 
+            corpusid, minPts, epsilon, label and an entity manager            
             */
             CCluster cluster = new CCluster();
             CEntityRaw cEntRaw = new CEntityRaw();
@@ -466,10 +545,11 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
             {
                 int newClusterId=cluster.generateNewClusterByHand(em, corpusId, minPts, epsilon, label);
                 cEntRaw.updateEntitiesClusterByHand(em, entitiesToCreateNewCluster, oldClusterId, newClusterId);                
+                answer[1]=Integer.toString(newClusterId); 
             }                                    
             catch(Exception e)
             {
-                answer="A problem happened during the new cluster generation";
+                answer[0]="A problem happened during the new cluster generation";
                 e.printStackTrace();
             }
             /*if(answer.length()==0)
@@ -491,7 +571,7 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
         }
         else
         {
-            answer="In order to generate a new cluster you must select at least two entities";
+            answer[0]="In order to generate a new cluster you must select at least two entities";
         }
         
         return answer;
@@ -606,7 +686,12 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
         showClusters(corpusId, minPts,  epsilon);
     }//GEN-LAST:event_jTableConfigurationClusterAvailableMouseClicked
     
- private void addEntityIntoHashMap(boolean newValue, int entityId) 
+ private void addOrDeletedEntityIntoHashMap(boolean newValue, int entityId) 
+    /*
+     This method receives two parameters a flag and the entity ID. When the flag 
+     is true the entity is added into the hashset entitiesToCreateNewCluster;
+     when the flag is false the entity is removed from the hashset entitiesToCreateNewCluster
+     */
     {
         if(newValue)//reviso si la entidad ya existe en el Hash Map
         {

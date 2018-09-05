@@ -52,7 +52,7 @@ public class DAODocument implements Serializable {
     @Column(name = "DATE")
     private String date;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "docid")
-    private Set<DAOParagraph> paragraphSet;
+    private Set<DAOParagraph> dAOParagraphSet;
     @JoinColumn(name = "CORPID", referencedColumnName = "CORPID")
     @ManyToOne(optional = false)
     private DAOCorpus corpid;
@@ -97,12 +97,12 @@ public class DAODocument implements Serializable {
     }
 
     @XmlTransient
-    public Set<DAOParagraph> getParagraphSet() {
-        return paragraphSet;
+    public Set<DAOParagraph> getDAOParagraphSet() {
+        return dAOParagraphSet;
     }
 
-    public void setParagraphSet(Set<DAOParagraph> paragraphSet) {
-        this.paragraphSet = paragraphSet;
+    public void setDAOParagraphSet(Set<DAOParagraph> dAOParagraphSet) {
+        this.dAOParagraphSet = dAOParagraphSet;
     }
 
     public DAOCorpus getCorpid() {

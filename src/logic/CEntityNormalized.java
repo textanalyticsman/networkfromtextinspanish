@@ -23,7 +23,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-
+import database.DAOCluster;
 
 /**
  *
@@ -105,6 +105,83 @@ public class CEntityNormalized {
         
         return listOfNormalizedEntities;        
     }
+    
+    public DAOEntityNormalized getNormanlizedEntityForACluster(int corpusId, int minPts, double epsilon, int clusterId)
+    {
+        /*
+        28/08/2018
+        After generating normalized entities this software needs a method to cover
+        the need of fixing clusters by hand. Thus, this is going to fix the normalization
+        process in case clusters are modified after this phase.
+        */
+        
+        //To get the unique register returned by the query
+        List<Object[]> resultSet=new ArrayList<Object[]>();
+        
+        DAOEntityNormalized entityNormalized= new DAOEntityNormalized();
+        EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager();        
+        
+        String queryText="(select " +
+                    " table2.CLUSTERID,table2.LABEL,table2.ENTITYID,table2.ENTITYNAME,table2.entitytype " +
+                    " from " +
+                    " (select " +
+                    " distinct " +
+                    " clus.CLUSTERID as clusterid, " +
+                    " clus.LABEL as label , " +
+                    " ent.ENTITYNAME as entityname, " +
+                    " ent.ENTITYTYPE as entitytype, " +
+                    " table1.longitud as longitud, " +
+                    " ent.ENTITYID " +
+                    " from " +
+                    " snadb.entityraw ent, " +
+                    " snadb.entityrawcluster entclus, " +
+                    " snadb.cluster clus, " +
+                    " (SELECT " +
+                    " c.CLUSTERID as clusterid, " +
+                    " max(length(e.ENTITYNAME)) as longitud " +
+                    " from " +
+                    " snadb.cluster c, " +
+                    " snadb.entityraw e, " +
+                    " snadb.entityrawcluster ec " +
+                    " WHERE " +
+                    " c.CLUSTERID=? and " +
+                    " ec.CLUSTERID=c.CLUSTERID and " +
+                    " ec.ENTITYID=e.ENTITYID and " +
+                    " c.CORPID = ? and " +
+                    " c.minpts =? and " +
+                    " c.eps=? and " +
+                    " c.LABEL<>? " +
+                    " group by 1) as table1 " +
+                    " where " +
+                    " ent.ENTITYID=entclus.ENTITYID and " +
+                    " entclus.CLUSTERID=table1.clusterid and " +
+                    " clus.CLUSTERID=entclus.CLUSTERID " +
+                    " having " +
+                    " length(ent.ENTITYNAME)=table1.longitud) as table2 " +
+                    " group by 1,2)";   
+        
+        Query query = em.createNativeQuery(queryText);
+        query.setParameter(1, clusterId);
+        query.setParameter(2, corpusId);
+        query.setParameter(3, minPts);
+        query.setParameter(4, epsilon);
+        /*This represents noise in the definition of DBSCAN as implemented by 
+        Smile*/
+        query.setParameter(5, 2147483647);
+        //Getting the result of the query
+        resultSet=query.getResultList();
+        //A DAOCluster object is created
+        DAOCluster dCluster = new DAOCluster(clusterId);
+        entityNormalized.setClusterid(dCluster);
+        //Getting the first row because the query only gets one row
+        Object[] temp=resultSet.get(0);
+        //Column number 4th from the resultSet is used here
+        entityNormalized.setEntitynormname((String)temp[3]);
+        //Column number 5th from the resultSet is used here
+        entityNormalized.setEntitynormtype((String)temp[4]);        
+                
+        return entityNormalized;
+    }        
     
     public List<Object[]>  getNormalizedEntitiesByCorpusEpsMinpts(int corpusId, int minPts, double epsilon)
     {
@@ -264,7 +341,7 @@ public class CEntityNormalized {
     }    
    
     
-public List<Object[]>  getNormalizedEntitiesAndSentences(int corpusId, int minPts, double epsilon)
+    public List<Object[]>  getNormalizedEntitiesAndSentences(int corpusId, int minPts, double epsilon)
     {
         List<Object[]> listOfNormalizedEntitiesAndSentences=new ArrayList<Object[]>();
         
@@ -330,7 +407,107 @@ public List<Object[]>  getNormalizedEntitiesAndSentences(int corpusId, int minPt
         listOfNormalizedEntitiesAndSentences= query.getResultList();
         
         return listOfNormalizedEntitiesAndSentences;        
-    }    
+    }
+
+    public List<Object[]>  getNormalizedEntitiyAndSentencesForACLuster(int corpusId, int minPts, double epsilon, int clusterId)
+    {
+        /*
+        29/08/2018
+        After generating normalized entities this software needs a method to cover
+        the need of fixing clusters by hand. Thus, this is going to get the 
+        relationships between sentences and a normalized entity 
+        in case clusters are modified after this phase.
+        04/09/2018
+        The query assigned to queryText was modified to include a distinct clause,
+        without this clause it returns repeated rows, which generates problems
+        for the insert executed on table sentenceentitynormalized
+        */
+        List<Object[]> listOfNormalizedEntitiesAndSentences=new ArrayList<Object[]>();
+        
+        
+        EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager(); 
+        
+        
+        String queryText="select distinct " +
+                        "entnorm.ENTITYNORMID,sent.SENTENCEID " +
+                        "from " +
+                        "snadb.corpus corp, " +
+                        "snadb.entitynormalized entnorm, " +
+                        "snadb.cluster clus, " +
+                        "snadb.entityrawcluster entrawclu, " +
+                        "snadb.entityraw entraw, " +
+                        "snadb.sentence sent " +
+                        "where " +
+                        "clus.CLUSTERID=? and " +
+                        "clus.CORPID=corp.CORPID and " +
+                        "entnorm.CLUSTERID=clus.CLUSTERID and " +
+                        "clus.CLUSTERID=entrawclu.CLUSTERID and " +
+                        "entraw.ENTITYID=entrawclu.ENTITYID and " +
+                        "entraw.SENTENCEID=sent.SENTENCEID and " +
+                        "clus.CORPID=? and " +
+                        "clus.MINPTS=? and " +
+                        "clus.EPS=? and " +
+                        "clus.LABEL<>?";    
+        
+        Query query = em.createNativeQuery(queryText);
+        
+        int noise=2147483647;  
+        
+        query.setParameter(1, clusterId);
+        query.setParameter(2, corpusId);
+        query.setParameter(3, minPts);
+        query.setParameter(4, epsilon);
+        query.setParameter(5, noise);        
+        
+        listOfNormalizedEntitiesAndSentences= query.getResultList();
+        
+        return listOfNormalizedEntitiesAndSentences;                
+    }        
+    
+ public String saveRelationNormalizedEntitySentencesForACluster(List<Object[]> resultSet)
+ {
+        String answer="";
+        CEntityNormalized entNorm = new CEntityNormalized();
+                        
+        int selectCount=resultSet.size();
+        
+        if(selectCount>0)
+        {
+            EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager(); 
+
+            em.getTransaction().begin();
+            
+            for (Object[] result : resultSet)
+            {    
+                Integer entityNormId=(Integer)result[0];
+                Integer sentenceId=(Integer)result[1];
+                
+                
+                CEntityNormalized cEntNorm = new CEntityNormalized();
+                cEntNorm.saveRelationNormalizedEntitiesSentences(em, entityNormId, sentenceId);
+
+            }
+
+            try
+            {
+              em.getTransaction().commit();
+            }
+            catch (Exception e)
+            {
+              answer="\nIt was impossible to save the relationship between a normalized entity and sentences";
+              em.getTransaction().rollback();
+              e.printStackTrace();
+              throw e;
+            }            
+          
+        }
+        else
+        {
+            answer="You should generate these relationships before saving them";
+        }
+        
+        return answer;     
+ }    
 
     public void updateEntityNormRole(EntityManager em, int entityId, String newRole)
     {

@@ -97,23 +97,29 @@ public class CCorpus {
         /*
         This function is used to to validate whether there are entities for a given corpus or not.
         In this way, it is possible to avoid unnecessary processing
+        
+        18/08/2018
+        Query modified to include the paragraph
         */
+        
         boolean result=false;
         
         EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager();        
         
         String queryText="select " +
-                "count(e.entityid) "+
-                "from "+
-                "Corpus c, " + 
-                "Document d, " + 
-                "Sentence s, " + 
-                "EntityRaw e " +
-                "where " +
-                "c.corpid= ? and " +
-                "c.corpid=d.corpid and " +
-                "d.docid=s.docid and " +
-                "s.sentenceid=e.sentenceid ";
+                        "count(e.entityid) " +
+                        "from " +
+                        "Corpus c, " +  
+                        "Document d, " +  
+                        "Sentence s, " +
+                        "EntityRaw e, " +
+                        "paragraph p " + 
+                        "where " + 
+                        "c.corpid= ? and " +
+                        "c.corpid=d.corpid and " +
+                        "p.DOCID=d.DOCID and " +
+                        "s.paragraphid=p.paragraphid and " +
+                        "s.sentenceid=e.sentenceid ";
         
         Query query = em.createNativeQuery(queryText);
         query.setParameter(1, corpusId);
@@ -137,19 +143,21 @@ public class CCorpus {
         
         EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager();        
         
-        String queryText="select " +
-                        "e.ENTITYID,e.ENTITYNAME,e.ENTITYTYPE, "+
+        String queryText= "select " +
+                        "e.ENTITYID,e.ENTITYNAME,e.ENTITYTYPE, " +
                         "d.DOCID, d.TITLE,s.SENTENCEID,s.SENTENCECONTENT " +
                         "from " +
                         "CORPUS c, " +
                         "document d, " +
                         "sentence s, " +
-                        "entityraw e " +
+                        "entityraw e, " +
+                        "paragraph p " +
                         "where " +
                         "c.CORPID=? and " +
                         "c.CORPID=d.CORPID and " +
-                        "d.DOCID=s.DOCID and " +
-                       " s.SENTENCEID=e.SENTENCEID ";                        
+                        "s.SENTENCEID=e.SENTENCEID and " +
+                        "s.PARAGRAPHID=p.PARAGRAPHID and " +
+                        "p.DOCID=d.DOCID";                        
         
         Query query = em.createNativeQuery(queryText);
         query.setParameter(1, corpusId);
