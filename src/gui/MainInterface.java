@@ -43,7 +43,9 @@ public class MainInterface extends javax.swing.JFrame {
         jMenuItemGenerateCanonicalEntities = new javax.swing.JMenuItem();
         jMenuRelateNormalEntitiesSentence = new javax.swing.JMenuItem();
         jMenuItemUpdateRolesForNormalizedEntities = new javax.swing.JMenuItem();
-        jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuCoOcurrenceParagraph = new javax.swing.JMenu();
+        jMenuCoOcurrenceSentence = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
         jMenuItemGenerateFilesForGephi = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -142,13 +144,20 @@ public class MainInterface extends javax.swing.JFrame {
 
         jMenuAnalyzer.add(jMenu1);
 
-        jMenuItem2.setText("Generate social network");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+        jMenuCoOcurrenceParagraph.setText("Generate social network");
+
+        jMenuCoOcurrenceSentence.setText("Co-ocurrence at paragraph level");
+        jMenuCoOcurrenceParagraph.add(jMenuCoOcurrenceSentence);
+
+        jMenuItem3.setText("Co-ocurrence at sentence level");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
+                jMenuItem3ActionPerformed(evt);
             }
         });
-        jMenuAnalyzer.add(jMenuItem2);
+        jMenuCoOcurrenceParagraph.add(jMenuItem3);
+
+        jMenuAnalyzer.add(jMenuCoOcurrenceParagraph);
 
         jMenuItemGenerateFilesForGephi.setText("Generate files for Gephi");
         jMenuItemGenerateFilesForGephi.addActionListener(new java.awt.event.ActionListener() {
@@ -254,19 +263,19 @@ public class MainInterface extends javax.swing.JFrame {
         
     }//GEN-LAST:event_jMenuItemUpdateRolesForNormalizedEntitiesActionPerformed
 
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        // TODO add your handling code here:        
-        javax.swing.JInternalFrame s = new GenerateASocialNetworkForNormEntities();
-        jDesktopPaneMain.add(s);
-        s.setVisible(true); 
-    }//GEN-LAST:event_jMenuItem2ActionPerformed
-
     private void jMenuItemGenerateFilesForGephiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemGenerateFilesForGephiActionPerformed
         // TODO add your handling code here:
         javax.swing.JInternalFrame s = new GenerateGephiFiles();
         jDesktopPaneMain.add(s);
         s.setVisible(true);         
     }//GEN-LAST:event_jMenuItemGenerateFilesForGephiActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        // TODO add your handling code here:
+        javax.swing.JInternalFrame s = new GenerateASocialNetworkCoOcurrenceSentence();
+        jDesktopPaneMain.add(s);
+        s.setVisible(true);         
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -308,10 +317,12 @@ public class MainInterface extends javax.swing.JFrame {
     private javax.swing.JDesktopPane jDesktopPaneMain;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenuAnalyzer;
+    private javax.swing.JMenu jMenuCoOcurrenceParagraph;
+    private javax.swing.JMenuItem jMenuCoOcurrenceSentence;
     private javax.swing.JMenuItem jMenuEntitiesNormalization;
     private javax.swing.JMenuItem jMenuExtractEntities;
     private javax.swing.JMenuItem jMenuIGenerateNewClusterByHand;
-    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItemAvailableCorporaReport;
     private javax.swing.JMenuItem jMenuItemCreateCorpus;
     private javax.swing.JMenuItem jMenuItemGenerateCanonicalEntities;

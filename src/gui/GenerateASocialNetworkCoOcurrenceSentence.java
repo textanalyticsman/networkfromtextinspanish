@@ -29,12 +29,12 @@ import org.apache.commons.lang3.text.WordUtils;
  *
  * @author osboxes
  */
-public class GenerateASocialNetworkForNormEntities extends javax.swing.JInternalFrame {
+public class GenerateASocialNetworkCoOcurrenceSentence extends javax.swing.JInternalFrame {
 
     /**
      * Creates new form EntitiesExtraction
      */
-    public GenerateASocialNetworkForNormEntities() {
+    public GenerateASocialNetworkCoOcurrenceSentence() {
         initComponents();
     }
 

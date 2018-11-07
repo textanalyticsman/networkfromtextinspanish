@@ -6,18 +6,23 @@
 package database;
 
 import java.io.Serializable;
+import java.util.Set;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -31,6 +36,12 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "DAOParagraph.findByParagraphid", query = "SELECT d FROM DAOParagraph d WHERE d.paragraphid = :paragraphid"),
     @NamedQuery(name = "DAOParagraph.findByParagraphorder", query = "SELECT d FROM DAOParagraph d WHERE d.paragraphorder = :paragraphorder")})
 public class DAOParagraph implements Serializable {
+
+    @Lob
+    @Column(name = "PARAGRAPHCONTENT")
+    private String paragraphcontent;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "paragraphid")
+    private Set<DAOSentence> dAOSentenceSet;
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -98,6 +109,23 @@ public class DAOParagraph implements Serializable {
     @Override
     public String toString() {
         return "database.DAOParagraph[ paragraphid=" + paragraphid + " ]";
+    }
+
+    public String getParagraphcontent() {
+        return paragraphcontent;
+    }
+
+    public void setParagraphcontent(String paragraphcontent) {
+        this.paragraphcontent = paragraphcontent;
+    }
+
+    @XmlTransient
+    public Set<DAOSentence> getDAOSentenceSet() {
+        return dAOSentenceSet;
+    }
+
+    public void setDAOSentenceSet(Set<DAOSentence> dAOSentenceSet) {
+        this.dAOSentenceSet = dAOSentenceSet;
     }
     
 }

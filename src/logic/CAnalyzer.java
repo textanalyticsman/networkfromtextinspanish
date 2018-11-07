@@ -242,6 +242,7 @@ public class CAnalyzer {
         String oracion;
         String bunchOfEntities;
         String entity;
+        String paragraph;
         
         ListParagraphIterator pIt = new ListParagraphIterator(doc);        
         
@@ -254,6 +255,9 @@ public class CAnalyzer {
             empty or not
             */            
             ListSentenceIterator sIt = new ListSentenceIterator(pIt.next());
+            
+            //Setting the variable that is goint to have the paragraph
+            paragraph="";
             
             if (sIt.hasNext())
             {
@@ -280,7 +284,7 @@ public class CAnalyzer {
                     ListWordIterator wIt = new ListWordIterator(s);              
                     oracion="";
                     entity="";
-                    bunchOfEntities="";
+                    bunchOfEntities="";                    
 
                     //Creación ede la sentencia que es guardada en la base de datos
                     DAOSentence daoSentence = new DAOSentence();
@@ -347,6 +351,9 @@ public class CAnalyzer {
                     System.out.println("Sentence number: "+ sentenceNumber);
                     System.out.println("Sentence: " + oracion);
                     System.out.println("Entities: " + bunchOfEntities);
+                    
+                    //Here the paragraph is built
+                    paragraph=paragraph+ oracion + "\n";
 
                     //Tomo el objeto dao de sentencia y le asigno el contenido de la oración detectada                
                     daoSentence.setSentencecontent(oracion);
@@ -364,6 +371,7 @@ public class CAnalyzer {
                     entityManager.persist(daoSentence);
                     //entityManager.clear();                            
                 }
+                //System.out.println("PARAGRAPH: " + paragraph);
                 /*Saving the paragraph after cheking the flag to avoid persisting
                 an emtpty paragraph that generates a Column 'PARAGRAPHID' cannot be null
                 */
@@ -372,6 +380,8 @@ public class CAnalyzer {
                 //System.out.println("NO EMPTY PARAGRAPH");
                 //Here the paragraph is related to the document
                 daoParagraph.setDocid(daoDoc);
+                //Here the paragraph content is saved
+                daoParagraph.setParagraphcontent(paragraph);
                 //The paragraph is saved
                 entityManager.persist(daoParagraph);
                 //The paragraph is added into the paragraphs set

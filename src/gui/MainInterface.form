@@ -110,14 +110,26 @@
                 </MenuItem>
               </SubComponents>
             </Menu>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItem2">
+            <Menu class="javax.swing.JMenu" name="jMenuCoOcurrenceParagraph">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Generate social network"/>
               </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem2ActionPerformed"/>
-              </Events>
-            </MenuItem>
+              <SubComponents>
+                <MenuItem class="javax.swing.JMenuItem" name="jMenuCoOcurrenceSentence">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Co-ocurrence at paragraph level"/>
+                  </Properties>
+                </MenuItem>
+                <MenuItem class="javax.swing.JMenuItem" name="jMenuItem3">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Co-ocurrence at sentence level"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem3ActionPerformed"/>
+                  </Events>
+                </MenuItem>
+              </SubComponents>
+            </Menu>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItemGenerateFilesForGephi">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Generate files for Gephi"/>

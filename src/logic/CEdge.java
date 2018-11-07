@@ -21,7 +21,9 @@ public class CEdge {
     private boolean visited;//Used during the reduction of redundant edges
     private int weight;//To save the weight of an edge
     private boolean unique; //TO whether the edge is inique or not
-    private String sentenceId; 
+    private String sentenceId;
+    private String paragraphId; //The paragraph id to manage co-ocurrence based on paragraphs
+    private String paragraph; //The paragraph to manage co-ocurrence based on paragraphs
     
   
     
