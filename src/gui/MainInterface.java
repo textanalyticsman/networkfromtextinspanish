@@ -147,6 +147,11 @@ public class MainInterface extends javax.swing.JFrame {
         jMenuCoOcurrenceParagraph.setText("Generate social network");
 
         jMenuCoOcurrenceSentence.setText("Co-ocurrence at paragraph level");
+        jMenuCoOcurrenceSentence.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuCoOcurrenceSentenceActionPerformed(evt);
+            }
+        });
         jMenuCoOcurrenceParagraph.add(jMenuCoOcurrenceSentence);
 
         jMenuItem3.setText("Co-ocurrence at sentence level");
@@ -276,6 +281,13 @@ public class MainInterface extends javax.swing.JFrame {
         jDesktopPaneMain.add(s);
         s.setVisible(true);         
     }//GEN-LAST:event_jMenuItem3ActionPerformed
+
+    private void jMenuCoOcurrenceSentenceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuCoOcurrenceSentenceActionPerformed
+        // TODO add your handling code here:
+        javax.swing.JInternalFrame s = new GenerateASocialNetworkCoOcurrenceParagraph();
+        jDesktopPaneMain.add(s);
+        s.setVisible(true);          
+    }//GEN-LAST:event_jMenuCoOcurrenceSentenceActionPerformed
 
     /**
      * @param args the command line arguments

@@ -536,7 +536,7 @@ public class CAnalyzer {
     }
 
  
- public List<CEdge>  getSocialNetwork(int corpusId, int minPts, double epsilon)
+ public List<CEdge>  getSocialNetworkCoOcurrenceBasedOnSentences(int corpusId, int minPts, double epsilon)
     {
         List<Object[]> rawSocialNetwork=new ArrayList<Object[]>();
         
@@ -629,7 +629,7 @@ public class CAnalyzer {
             String targetDescription=(String)result[5];
             //String sentenceIdSource=String.valueOf((Integer)result[2]);
             //String sentence=(String)result[6];
-            CEdge edge= new CEdge(source, target, sourceDescription, targetDescription, sentenceId, sentence);
+            CEdge edge= new CEdge(source, target, sourceDescription, targetDescription, sentenceId, sentence,"","");
             
             redundantSocialNetwork.add(edge);                                                 
         }
@@ -744,7 +744,219 @@ public class CAnalyzer {
         return finalSocialNetwork;        
     }
 
-    public void saveSocialNetwork(EntityManager em, int sourceId, String sourceDescription, int targetId, 
+  public List<CEdge>  getSocialNetworkCoOcurrenceBasedOnParagraphs(int corpusId, int minPts, double epsilon)
+    {
+        List<Object[]> rawSocialNetwork=new ArrayList<Object[]>();
+        
+        
+        EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager();        
+        
+        String queryText=    "select "+
+                            "senentnorm01.ENTITYNORMID, "+
+                            "senentnorm01.ENTITYNORMNAME, "+
+                            "senentnorm01.PARAGRAPHID, "+
+                            "senentnorm02.PARAGRAPHCONTENT, "+
+                            "senentnorm02.ENTITYNORMID, "+
+                            "senentnorm02.ENTITYNORMNAME "+
+                            "from "+
+                            "(select "+
+                            "sen01.ENTITYNORMID, "+
+                            "sen01.SENTENCEID, "+
+                            "entnorm.ENTITYNORMNAME, "+
+                            "sent.SENTENCECONTENT, "+
+                            "para.PARAGRAPHID, "+
+                            "para.PARAGRAPHCONTENT "+
+                            "from "+
+                            "snadb.sentenceentitynormalized sen01, "+
+                            "snadb.entitynormalized entnorm, "+
+                            "snadb.sentence sent, "+
+                            "snadb.paragraph para, "+
+                            "snadb.cluster clu, "+
+                            "snadb.corpus corp "+
+                            "where "+
+                            "sen01.ENTITYNORMID=entnorm.ENTITYNORMID and "+
+                            "sen01.SENTENCEID=sent.SENTENCEID and "+
+                            "sent.PARAGRAPHID=para.PARAGRAPHID and "+
+                            "entnorm.CLUSTERID=clu.CLUSTERID and "+
+                            "corp.CORPID=clu.CORPID and "+
+                            "corp.CORPID=? and "+
+                            "clu.MINPTS=? and "+
+                            "clu.EPS=?) as senentnorm01, "+
+                            "(select "+
+                            "sen01.ENTITYNORMID, "+
+                            "sen01.SENTENCEID, "+
+                            "entnorm.ENTITYNORMNAME, "+
+                            "sent.SENTENCECONTENT, "+
+                            "para.PARAGRAPHID, "+
+                            "para.PARAGRAPHCONTENT "+
+                            "from "+
+                            "snadb.sentenceentitynormalized sen01, "+
+                            "snadb.entitynormalized entnorm, "+
+                            "snadb.sentence sent, "+
+                            "snadb.paragraph para, "+
+                            "snadb.cluster clu, "+
+                            "snadb.corpus corp "+
+                            "where "+
+                            "sen01.ENTITYNORMID=entnorm.ENTITYNORMID and "+
+                            "sen01.SENTENCEID=sent.SENTENCEID and "+
+                            "sent.PARAGRAPHID=para.PARAGRAPHID and "+
+                            "entnorm.CLUSTERID=clu.CLUSTERID and "+
+                            "corp.CORPID=clu.CORPID and "+
+                            "corp.CORPID=? and "+
+                            "clu.MINPTS=? and "+
+                            "clu.EPS=?) as senentnorm02 "+
+                            "where "+
+                            "senentnorm01.ENTITYNORMID<>senentnorm02.ENTITYNORMID and "+
+                            "senentnorm01.PARAGRAPHID=senentnorm02.PARAGRAPHID ";                     
+                                        
+        Query query = em.createNativeQuery(queryText);
+        query.setParameter(1, corpusId);
+        query.setParameter(2, minPts);
+        query.setParameter(3, epsilon);        
+        query.setParameter(4, corpusId);
+        query.setParameter(5, minPts);
+        query.setParameter(6, epsilon);
+        
+        rawSocialNetwork= query.getResultList();
+        
+        List<CEdge> redundantSocialNetwork=new ArrayList<CEdge>();
+        
+        for (Object[] result : rawSocialNetwork)
+        {
+            /*
+               "senentnorm01.ENTITYNORMID, " +                  0
+                            "senentnorm01.ENTITYNORMNAME, " +   1
+                            "senentnorm01.SENTENCEID, " +       2
+                            "senentnorm01.SENTENCECONTENT, "+   3
+                            "senentnorm02.ENTITYNORMID, " +     4
+                            "senentnorm02.ENTITYNORMNAME, " +   5
+                            "senentnorm02.SENTENCEID, " +       6
+                            "senentnorm02.SENTENCECONTENT, " +  7
+                            "senentnorm02.SENTENCECONTENT "+    8    
+            */
+            String source=String.valueOf((Integer)result[0]);            
+            String sourceDescription=(String)result[1];
+            String paragraphId=String.valueOf((Integer)result[2]);
+            String paragrapContent=(String)result[3];
+            String target=String.valueOf((Integer)result[4]);
+            String targetDescription=(String)result[5];
+           
+            CEdge edge= new CEdge(source, target, sourceDescription, targetDescription, "", "",paragraphId,paragrapContent);
+            
+            redundantSocialNetwork.add(edge);                                                 
+        }
+
+        int numberOfEdges=redundantSocialNetwork.size();
+        
+        /*
+        Primero haciendo uso  del flag visitado voy a marcar todas las aristas repetidas que el query 
+        trae 
+                
+        */
+       for (int i=0;i<numberOfEdges-1;i++)
+        {
+            if(!redundantSocialNetwork.get(i).isVisited())
+            {
+                String codeDirectSource=redundantSocialNetwork.get(i).getCodeDirect();
+                String paragraphIdCurrent= redundantSocialNetwork.get(i).getParagraphId();
+                
+                //String sentences=temporalSocialNetwork.get(i).getSentence();//Para colectar la lista de sentencias de las aristas iguales
+                for(int j=i+1;j<numberOfEdges;j++)
+                {
+                    //String sentenceSource=temporalSocialNetwork.get(i).getSentence();                    
+                    if(!redundantSocialNetwork.get(j).isVisited())
+                    {                    
+                        String codeDirectTarget=redundantSocialNetwork.get(j).getCodeDirect();
+                        String codeReverseTarget=redundantSocialNetwork.get(j).getCodeReverse();
+
+                        if(codeDirectSource.compareTo(codeDirectTarget)==0||codeDirectSource.compareTo(codeReverseTarget)==0)
+                        {
+                            String paragraphIdNext=redundantSocialNetwork.get(j).getParagraphId();
+                            
+                            if(paragraphIdCurrent.compareTo(paragraphIdNext)==0)//Los parrafos tienen que ser diferentes para evitar redundancia
+                            {
+                                //int newWeight=temporalSocialNetwork.get(i).getWeight()+1;
+                                //temporalSocialNetwork.get(i).setWeight(newWeight);
+                                //temporalSocialNetwork.get(j).setVisited(true);
+                                redundantSocialNetwork.get(j).setVisited(true);
+
+                                //sentences=sentences+"\\n"+temporalSocialNetwork.get(j).getSentence();                                
+                            }
+
+                        }
+                    }
+                    //temporalSocialNetwork.get(i).setVisited(true);                                    
+                }
+               //temporalSocialNetwork.get(i).setSentence(sentences);
+            } //
+        }
+                
+        List<CEdge> temporalSocialNetwork=new ArrayList<CEdge>();
+        
+        for (int i=0;i<numberOfEdges;i++)
+        {
+            CEdge edge=redundantSocialNetwork.get(i);
+            if(!edge.isVisited())
+            {
+                temporalSocialNetwork.add(edge);
+            }                
+        }          
+        
+        int numberOfEdgesTemp=temporalSocialNetwork.size();
+        
+        for (int i=0;i<numberOfEdgesTemp-1;i++)
+        {
+            if(temporalSocialNetwork.get(i).isUnique())
+            {
+                String codeDirectSource=temporalSocialNetwork.get(i).getCodeDirect();
+                String paragraphIdCurrent= temporalSocialNetwork.get(i).getParagraphId();
+                
+                String paragraph=temporalSocialNetwork.get(i).getParagraph();//Para colectar la lista de parrafos de las aristas iguales
+                for(int j=i+1;j<numberOfEdgesTemp;j++)
+                {
+                    //String sentenceSource=temporalSocialNetwork.get(i).getSentence();                    
+                    if(temporalSocialNetwork.get(j).isUnique())
+                    {                    
+                        String codeDirectTarget=temporalSocialNetwork.get(j).getCodeDirect();
+                        String codeReverseTarget=temporalSocialNetwork.get(j).getCodeReverse();
+
+                        if(codeDirectSource.compareTo(codeDirectTarget)==0||codeDirectSource.compareTo(codeReverseTarget)==0)
+                        {
+                            String paragraphIdNext=temporalSocialNetwork.get(j).getParagraphId();
+                            
+                            if(paragraphIdCurrent.compareTo(paragraphIdNext)!=0)//Los parrafos tienen que ser diferentes para evitar redundancia
+                            {
+                                int newWeight=temporalSocialNetwork.get(i).getWeight()+1;
+                                temporalSocialNetwork.get(i).setWeight(newWeight);
+                                //temporalSocialNetwork.get(j).setVisited(true);
+                                temporalSocialNetwork.get(j).setUnique(false);
+
+                                paragraph=paragraph+'\n'+temporalSocialNetwork.get(j).getParagraph();                                
+                            }
+
+                        }
+                    }
+                    //temporalSocialNetwork.get(i).setVisited(true);                                    
+                }
+                temporalSocialNetwork.get(i).setParagraph(paragraph);
+            } //
+        }
+        
+        List<CEdge> finalSocialNetwork=new ArrayList<CEdge>();
+        
+        for (int i=0;i<numberOfEdgesTemp;i++)
+        {
+            CEdge edge=temporalSocialNetwork.get(i);
+            if(edge.isUnique())
+            {
+                finalSocialNetwork.add(edge);
+            }                
+        }        
+        
+        return finalSocialNetwork;        
+    }
+ 
+    public void saveSocialNetworkCoOccurrenceBasedOnSentences(EntityManager em, int sourceId, String sourceDescription, int targetId, 
                                  String targetDescription, int corpusId, int weight, String sentences)
     {
         Query query= em.createNamedQuery("DAOEntityNormalized.findByEntitynormid");                
@@ -792,6 +1004,57 @@ public class CAnalyzer {
         
        // return dCluster.getClusterid();        
     }  
+    
+public void saveSocialNetworkCoOccurrenceBasedOnParagraph(EntityManager em, int sourceId, String sourceDescription, int targetId, 
+                                 String targetDescription, int corpusId, int weight, String paragraph)
+    {
+        Query query= em.createNamedQuery("DAOEntityNormalized.findByEntitynormid");                
+        query.setParameter("entitynormid", sourceId);
+        DAOEntityNormalized entity01= (DAOEntityNormalized)query.getSingleResult();
+        
+        query= em.createNamedQuery("DAOEntityNormalized.findByEntitynormid");                
+        query.setParameter("entitynormid", targetId);
+        DAOEntityNormalized entity02= (DAOEntityNormalized)query.getSingleResult();
+        
+        query= em.createNamedQuery("DAOCorpus.findByCorpid");                
+        query.setParameter("corpid", corpusId);
+        DAOCorpus corpus= (DAOCorpus)query.getSingleResult();
+        
+        DAOEdgeList socialNetwork=new DAOEdgeList();
+        DAOEdgeListPK socialNetworkPK = new DAOEdgeListPK();
+
+        socialNetworkPK.setEntitynormid01(sourceId);
+        socialNetworkPK.setEntitynormid02(targetId);
+        
+        socialNetwork.setDAOEdgeListPK(socialNetworkPK);
+        
+        socialNetwork.setDAOEntityNormalized(entity01);
+        socialNetwork.setDAOEntityNormalized1(entity02);
+        
+        socialNetwork.setCorpusCorpid(corpus);
+        
+        socialNetwork.setEntitynormname01(sourceDescription);
+        socialNetwork.setEntitynormname02(targetDescription);
+        
+        socialNetwork.setWeight(weight);
+        /*The table EDGELIST on the DB has a field called sentences
+        that in this case is used to save the paragraph*/
+        socialNetwork.setSentences(paragraph);
+                
+        //em.getTransaction().begin();
+        try
+        {   
+            em.persist(socialNetwork);
+            //em.getTransaction().commit();
+        }
+        catch (Exception e)
+        {
+            //em.getTransaction().rollback();
+            throw e;
+        }
+        
+       // return dCluster.getClusterid();        
+    }    
     
 public List<Object[]>  getSocialNetworkFomDatabase(int corpusId, int minPts, double epsilon)
     {

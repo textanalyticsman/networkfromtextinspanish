@@ -119,6 +119,9 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Co-ocurrence at paragraph level"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuCoOcurrenceSentenceActionPerformed"/>
+                  </Events>
                 </MenuItem>
                 <MenuItem class="javax.swing.JMenuItem" name="jMenuItem3">
                   <Properties>

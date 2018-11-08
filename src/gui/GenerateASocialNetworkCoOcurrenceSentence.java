@@ -391,7 +391,7 @@ public class GenerateASocialNetworkCoOcurrenceSentence extends javax.swing.JInte
                DefaultTableModel model1 = (DefaultTableModel) jTableSocialNetwork.getModel();
                model1.setRowCount(0);
 
-               List<CEdge> resultSet = analizer.getSocialNetwork(corpusId, minPts, epsilon);
+               List<CEdge> resultSet = analizer.getSocialNetworkCoOcurrenceBasedOnSentences(corpusId, minPts, epsilon);
 
                for (CEdge result : resultSet) {
                    
@@ -661,7 +661,7 @@ public class GenerateASocialNetworkCoOcurrenceSentence extends javax.swing.JInte
                 
                 CAnalyzer analyzer = new CAnalyzer();
                 
-                analyzer.saveSocialNetwork(em, sourceId, sourceDescription, targetId, targetDescription, corpusId, weight, sentences);
+                analyzer.saveSocialNetworkCoOccurrenceBasedOnSentences(em, sourceId, sourceDescription, targetId, targetDescription, corpusId, weight, sentences);
             }
 
             try

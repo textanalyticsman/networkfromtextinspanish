@@ -204,7 +204,7 @@ public class GenerateASocialNetworkCoOcurrenceParagraph extends javax.swing.JInt
 
             },
             new String [] {
-                "Source ID", "Source Description", "Target ID", "Target Description", "Sentence", "Weight"
+                "Source ID", "Source Description", "Target ID", "Target Description", "Paragraph", "Weight"
             }
         ) {
             Class[] types = new Class [] {
@@ -391,7 +391,7 @@ public class GenerateASocialNetworkCoOcurrenceParagraph extends javax.swing.JInt
                DefaultTableModel model1 = (DefaultTableModel) jTableSocialNetwork.getModel();
                model1.setRowCount(0);
 
-               List<CEdge> resultSet = analizer.getSocialNetwork(corpusId, minPts, epsilon);
+               List<CEdge> resultSet = analizer.getSocialNetworkCoOcurrenceBasedOnParagraphs(corpusId, minPts, epsilon);
 
                for (CEdge result : resultSet) {
                    
@@ -401,9 +401,9 @@ public class GenerateASocialNetworkCoOcurrenceParagraph extends javax.swing.JInt
                    String sourceDescription=result.getSourceDescription();
                    Integer targetID=Integer.parseInt(result.getTarget());
                    String targetDescription=result.getTargetDescription();                   
-                   String sentence=result.getSentence();
+                   String paragraph=result.getParagraph();
                    Integer weightEdge=result.getWeight();
-                   modelc1.insertRow(jTableSocialNetwork.getRowCount(), new Object []{sourceID,sourceDescription,targetID,targetDescription,sentence,weightEdge});                         
+                   modelc1.insertRow(jTableSocialNetwork.getRowCount(), new Object []{sourceID,sourceDescription,targetID,targetDescription,paragraph,weightEdge});                         
                }                 
     //    }
       //  else
@@ -656,12 +656,12 @@ public class GenerateASocialNetworkCoOcurrenceParagraph extends javax.swing.JInt
                 String sourceDescription=(String)jTableSocialNetwork.getValueAt(i, 1); 
                 int targetId=(Integer)jTableSocialNetwork.getValueAt(i, 2);  
                 String targetDescription=(String)jTableSocialNetwork.getValueAt(i, 3);  
-                String sentences=(String)jTableSocialNetwork.getValueAt(i, 4);  
+                String paragraph=(String)jTableSocialNetwork.getValueAt(i, 4);  
                 int weight=(Integer)jTableSocialNetwork.getValueAt(i, 5);                  
                 
                 CAnalyzer analyzer = new CAnalyzer();
                 
-                analyzer.saveSocialNetwork(em, sourceId, sourceDescription, targetId, targetDescription, corpusId, weight, sentences);
+                analyzer.saveSocialNetworkCoOccurrenceBasedOnParagraph(em, sourceId, sourceDescription, targetId, targetDescription, corpusId, weight, paragraph);
             }
 
             try

@@ -255,7 +255,7 @@
                 <Column editable="false" title="Source Description" type="java.lang.String"/>
                 <Column editable="false" title="Target ID" type="java.lang.Integer"/>
                 <Column editable="false" title="Target Description" type="java.lang.String"/>
-                <Column editable="false" title="Sentence" type="java.lang.String"/>
+                <Column editable="false" title="Paragraph" type="java.lang.String"/>
                 <Column editable="false" title="Weight" type="java.lang.Integer"/>
               </Table>
             </Property>

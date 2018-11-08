@@ -34,7 +34,7 @@ public class CFileManager {
             LocalTime now = LocalTime.now();
             String theHour=now.toString();
             String fileName=filePrefix+theDate+theHour;
-            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("/home/osboxes/NetBeansProjects/ThesisSNAFromSpanishText/GephiFiles/"+fileName), "utf-8"));
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("/home/osboxes/NetBeansProjects/networkfromtextinspanish/GephiFiles/"+fileName), "utf-8"));
 
             //write the header information
             StringBuffer bufferHeader = new StringBuffer();

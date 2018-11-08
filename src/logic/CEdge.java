@@ -28,7 +28,7 @@ public class CEdge {
   
     
     public CEdge(String source, String target, String sourceDescription, String targetDescription, 
-                  String sentenceId, String sentence)
+                  String sentenceId, String sentence, String paragraphId, String paragraph)
     {
         this.source=source;
         this.target=target;
@@ -41,7 +41,17 @@ public class CEdge {
         this.weight=1;
         this.sentenceId=sentenceId;
         this.sentence=sentence;
+        this.paragraphId=paragraphId;
+        this.paragraph=paragraph;
     }       
+
+    public void setParagraphId(String paragraphId) {
+        this.paragraphId = paragraphId;
+    }
+
+    public void setParagraph(String paragraph) {
+        this.paragraph = paragraph;
+    }
 
     public String getSourceDescription() {
         return sourceDescription;
@@ -117,6 +127,14 @@ public class CEdge {
 
     public String getSentenceId() {
         return sentenceId;
+    }
+
+    public String getParagraphId() {
+        return paragraphId;
+    }
+
+    public String getParagraph() {
+        return paragraph;
     }
 
     public void setSentenceId(String sentenceId) {

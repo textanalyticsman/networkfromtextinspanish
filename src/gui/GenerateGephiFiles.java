@@ -638,55 +638,7 @@ public class GenerateGephiFiles extends javax.swing.JInternalFrame {
               
     }//GEN-LAST:event_jTableSocialNetworkMouseClicked
     
- private String saveSocialNetwork()
- {
-        String answer="";
-                
-        if(jTableSocialNetwork.getRowCount()>0)
-        {
-            EntityManager em = Persistence.createEntityManagerFactory("SNAFromSpanishTextPU").createEntityManager(); 
-
-            int selectCount=jTableSocialNetwork.getRowCount();
-            
-            int row=jTableAvailableCorpora.getSelectedRow();                
-            int corpusId=(Integer)jTableAvailableCorpora.getValueAt(row, 0);            
-            
-            em.getTransaction().begin();
-            
-            for (int i=0;i<selectCount;i++)
-            {
-                int sourceId=(Integer)jTableSocialNetwork.getValueAt(i, 0); 
-                String sourceDescription=(String)jTableSocialNetwork.getValueAt(i, 1); 
-                int targetId=(Integer)jTableSocialNetwork.getValueAt(i, 2);  
-                String targetDescription=(String)jTableSocialNetwork.getValueAt(i, 3);  
-                String sentences=(String)jTableSocialNetwork.getValueAt(i, 4);  
-                int weight=(Integer)jTableSocialNetwork.getValueAt(i, 5);                  
-                
-                CAnalyzer analyzer = new CAnalyzer();
-                
-                analyzer.saveSocialNetwork(em, sourceId, sourceDescription, targetId, targetDescription, corpusId, weight, sentences);
-            }
-
-            try
-            {
-              em.getTransaction().commit();
-            }
-            catch (Exception e)
-            {
-              answer="It was impossible to save the social network";
-              em.getTransaction().rollback();
-              e.printStackTrace();
-              throw e;
-            }            
-          
-        }
-        else
-        {
-            answer="You should generate the social network before saving it";
-        }
-        
-        return answer;     
- }
+ 
  private void addEntityIntoHashMap(boolean newValue, int entityId) 
     {
         if(newValue)//reviso si la entidad ya existe en el Hash Map
