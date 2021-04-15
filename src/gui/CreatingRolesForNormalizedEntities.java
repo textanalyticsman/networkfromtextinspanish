@@ -18,6 +18,7 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.table.DefaultTableModel;
@@ -606,11 +607,15 @@ public class CreatingRolesForNormalizedEntities extends javax.swing.JInternalFra
 
             String sentence= (String)jTableNormalizedEntities.getModel().getValueAt(trueIndex, 3);
 
-            String message=WordUtils.wrap(sentence, 200, "\n", false);
+            String message=WordUtils.wrap(sentence, 150, "\n", false);
 
             String title="Sentence detail";
 
-            JOptionPane.showMessageDialog(null,message,title, JOptionPane.INFORMATION_MESSAGE);
+            HighlightText ht = new HighlightText();
+            
+            JTextArea messageJTextArea = ht.highLightText(message);            
+
+            JOptionPane.showMessageDialog(null,messageJTextArea,title, JOptionPane.INFORMATION_MESSAGE);
         }
     }//GEN-LAST:event_jTableNormalizedEntitiesMouseClicked
     

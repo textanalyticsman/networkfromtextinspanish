@@ -6,6 +6,7 @@
 package gui;
 
 import database.DAOCorpus;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +14,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.swing.AbstractAction;
@@ -20,12 +23,15 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
 import logic.CCorpus;
 import logic.CEntityRawSentence;
 import logic.CEntityRawTypeModificationsControl;
@@ -510,14 +516,18 @@ public class EntititesRevisionAndFixing extends javax.swing.JInternalFrame {
        
             String sentence= (String)jTableCorpusEntities.getModel().getValueAt(trueIndex, 5);
        
-            String message=WordUtils.wrap(sentence, 200, "\n", false);
+            String message=WordUtils.wrap(sentence, 150, "\n", false);
             
             String title="Sentence detail";
             
-            JOptionPane.showMessageDialog(null,message,title, JOptionPane.INFORMATION_MESSAGE);                                
+            HighlightText ht = new HighlightText();
+            
+            JTextArea messageJTextArea = ht.highLightText(message);
+            
+            JOptionPane.showMessageDialog(null,messageJTextArea,title, JOptionPane.INFORMATION_MESSAGE);                                                                    
         }
     }//GEN-LAST:event_jTableCorpusEntitiesMouseClicked
-
+        
     private void jButtonUpdateModifiedEntitiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdateModifiedEntitiesActionPerformed
         // TODO add your handling code here:
         String answer=updateEntityAndUpdateSentence();

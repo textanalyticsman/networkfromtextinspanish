@@ -38,7 +38,7 @@ public class CAnalyzer {
         
         String FREELINGDIR = "/usr/local";
         String DATA = FREELINGDIR + "/share/freeling/";
-        String LANG = "es";     
+        String LANG = "en";     
         System.loadLibrary( "freeling_javaAPI" );
         Util.initLocale( "default" );        
         

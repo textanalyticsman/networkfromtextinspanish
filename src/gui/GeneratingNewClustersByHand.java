@@ -18,6 +18,7 @@ import javax.persistence.Persistence;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.table.DefaultTableModel;
@@ -665,11 +666,15 @@ public class GeneratingNewClustersByHand extends javax.swing.JInternalFrame {
 
             String sentence= (String)jTableCorpusEntitiesBelongCluster.getModel().getValueAt(trueIndex, 5);
 
-            String message=WordUtils.wrap(sentence, 200, "\n", false);
+            String message=WordUtils.wrap(sentence, 150, "\n", false);
 
             String title="Sentence detail";
+            
+            HighlightText ht = new HighlightText();
+            
+            JTextArea messageJTextArea = ht.highLightText(message);            
 
-            JOptionPane.showMessageDialog(null,message,title, JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null,messageJTextArea,title, JOptionPane.INFORMATION_MESSAGE);
         }
     }//GEN-LAST:event_jTableCorpusEntitiesBelongClusterMouseClicked
 

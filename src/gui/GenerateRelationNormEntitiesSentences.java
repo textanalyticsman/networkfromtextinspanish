@@ -12,6 +12,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.table.DefaultTableModel;
@@ -587,11 +588,15 @@ public class GenerateRelationNormEntitiesSentences extends javax.swing.JInternal
        
             String sentence= (String)jTableEntitiesNormSentences.getModel().getValueAt(trueIndex, 4);
        
-            String message=WordUtils.wrap(sentence, 200, "\n", false);
-            
+            String message=WordUtils.wrap(sentence, 150, "\n", false);
+
             String title="Sentence detail";
+
+            HighlightText ht = new HighlightText();
             
-            JOptionPane.showMessageDialog(null,message,title, JOptionPane.INFORMATION_MESSAGE);                                
+            JTextArea messageJTextArea = ht.highLightText(message);            
+
+            JOptionPane.showMessageDialog(null,messageJTextArea,title, JOptionPane.INFORMATION_MESSAGE);
         }
               
     }//GEN-LAST:event_jTableEntitiesNormSentencesMouseClicked

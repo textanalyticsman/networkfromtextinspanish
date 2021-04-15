@@ -617,24 +617,6 @@ public class GenerateGephiFiles extends javax.swing.JInternalFrame {
 
     private void jTableSocialNetworkMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableSocialNetworkMouseClicked
         // TODO add your handling code here:
-        if(evt.getClickCount()==2)
-        {
-            int row=jTableSocialNetwork.getSelectedRow();
-            
-            System.out.println("Row: " + row);
-            
-            int trueIndex=jTableSocialNetwork.convertRowIndexToModel(row);
-            
-            System.out.println("Fila: " + trueIndex);
-       
-            String sentence= (String)jTableSocialNetwork.getModel().getValueAt(trueIndex, 4);
-       
-            String message=WordUtils.wrap(sentence, 200, "\n", false);
-            
-            String title="Sentence detail";
-            
-            JOptionPane.showMessageDialog(null,message,title, JOptionPane.INFORMATION_MESSAGE);                                
-        }
               
     }//GEN-LAST:event_jTableSocialNetworkMouseClicked
     

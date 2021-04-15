@@ -6,18 +6,24 @@
 package gui;
 
 import database.DAOCorpus;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
 import logic.CCorpus;
 import logic.CEntityRaw;
 import logic.CEntityRawSentence;
@@ -429,12 +435,12 @@ public class EntititesRevisionAndCorrection extends javax.swing.JInternalFrame {
        
             String message=WordUtils.wrap(sentence, 200, "\n", false);
             
-            String title="Sentence detail";
+            String title="Sentence detail";            
             
             JOptionPane.showMessageDialog(null,message,title, JOptionPane.INFORMATION_MESSAGE);                                
         }
     }//GEN-LAST:event_jTableCorpusEntitiesMouseClicked
-  
+     
     private boolean validateInput()
     {
         int numRows=jTableCorpusEntities.getRowCount();        
