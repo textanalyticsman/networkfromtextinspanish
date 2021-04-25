@@ -625,7 +625,7 @@ public class GenerateGephiFiles extends javax.swing.JInternalFrame {
     {
         if(newValue)//reviso si la entidad ya existe en el Hash Map
         {
-            /*Si la entidad ya existe en el Hash Map simplemente modifico su NewType*/
+            /*Si la entidad ya existe en el Hash Map simplemente dmodifico su NewType*/
             entitiesToMove.add(entityId);
         }
         else
